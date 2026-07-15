@@ -1,0 +1,269 @@
+<style>
+  .cbk * { box-sizing: border-box; }
+  .cbk { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text-primary, #1f2937); }
+  .cbk .note { text-align: center; font-size: 12px; color: var(--text-secondary, #6b7280); margin-bottom: 10px; }
+  .cbk .status-line { text-align: center; font-size: 12px; margin-bottom: 16px; padding: 6px; border-radius: 6px; }
+  .cbk .status-ok { background: #d1fae5; color: #065f46; }
+  .cbk .status-bad { background: #fee2e2; color: #991b1b; }
+  .cbk .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+  @media (min-width: 768px) { .cbk .grid { grid-template-columns: 1fr 2fr; } }
+  .cbk .card { background: var(--surface-2, #fff); padding: 20px; border-radius: 10px; border: 1px solid var(--border, #e5e7eb); }
+  .cbk h2 { margin-top: 0; font-size: 16px; border-bottom: 2px solid var(--border, #e5e7eb); padding-bottom: 10px; color: #1e3a8a; }
+  .cbk .form-group { margin-bottom: 14px; }
+  .cbk label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; }
+  .cbk input, .cbk select, .cbk textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border, #d1d5db); border-radius: 5px; font-size: 14px; font-family: inherit; background: var(--surface-2, #fff); color: inherit; }
+  .cbk textarea { resize: vertical; min-height: 40px; }
+  .cbk button.submit-btn { background: #3b82f6; color: #fff; padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; }
+  .cbk button.submit-btn:hover { background: #1e3a8a; }
+  .cbk button.submit-btn:disabled { opacity: 0.6; cursor: default; }
+  .cbk .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+  .cbk .tab { padding: 9px 18px; background: var(--surface-1, #e5e7eb); border: none; cursor: pointer; border-radius: 5px; font-weight: 600; font-size: 13px; color: inherit; }
+  .cbk .tab.active { background: #1e3a8a; color: #fff; }
+  .cbk .table-responsive { overflow-x: auto; }
+  .cbk table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+  .cbk th, .cbk td { padding: 9px; text-align: left; border-bottom: 1px solid var(--border, #e5e7eb); }
+  .cbk th { background: var(--surface-1, #f9fafb); color: #1e3a8a; font-weight: 600; white-space: nowrap; }
+  .cbk .badge { padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; white-space: nowrap; display: inline-block; }
+  .cbk .badge-success { background: #d1fae5; color: #065f46; }
+  .cbk .badge-danger { background: #fee2e2; color: #991b1b; }
+  .cbk .delete-btn { border: none; background: none; color: #ef4444; cursor: pointer; font-size: 12px; font-weight: 600; }
+  .cbk .empty-row td { text-align: center; color: var(--text-secondary, #6b7280); padding: 20px 0; }
+  .cbk .warn-box { margin-top: 10px; padding: 10px 12px; background: #fee2e2; border: 1px solid #991b1b; border-radius: 6px; color: #991b1b; font-size: 13px; word-break: break-word; }
+  .cbk .ok-box { margin-top: 10px; padding: 10px 12px; background: #d1fae5; border: 1px solid #065f46; border-radius: 6px; color: #065f46; font-size: 13px; }
+  .cbk .retry-btn { margin-top: 8px; background: none; border: 1px solid #991b1b; color: #991b1b; padding: 6px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; }
+</style>
+
+<div class="cbk">
+  <p class="note">Shared booking log — everyone with this link sees and updates the same list.</p>
+  <div id="statusLine" class="status-line status-ok">Checking connection…</div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>New reservation</h2>
+      <form id="bookingForm">
+        <div class="form-group">
+          <label for="hallSelect">Select conference hall</label>
+          <select id="hallSelect">
+            <option value="1">Main Conference Hall</option>
+            <option value="2">Mini Conference Hall</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="date">Date</label>
+          <input type="date" id="date" required>
+        </div>
+        <div class="form-group">
+          <label for="startTime">Start time</label>
+          <input type="time" id="startTime" required>
+        </div>
+        <div class="form-group">
+          <label for="endTime">End time</label>
+          <input type="time" id="endTime" required>
+        </div>
+        <div class="form-group">
+          <label for="bookedBy">Booked by</label>
+          <input type="text" id="bookedBy" placeholder="Your full name" required>
+        </div>
+        <div class="form-group">
+          <label for="department">Department / office</label>
+          <input type="text" id="department" placeholder="e.g. SPMU - Procurement">
+        </div>
+        <div class="form-group">
+          <label for="purpose">Purpose of meeting</label>
+          <textarea id="purpose" rows="3" placeholder="Brief explanation..."></textarea>
+        </div>
+        <button type="submit" class="submit-btn" id="submitBtn">Submit reservation</button>
+        <div id="formMsg"></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" id="tabBtn1" onclick="switchTab('1')">Main Conference Hall log</button>
+        <button class="tab" id="tabBtn2" onclick="switchTab('2')">Mini Conference Hall log</button>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th><th>Start</th><th>End</th><th>Booked by</th>
+              <th>Department</th><th>Purpose</th><th>Conflict check</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="bookingsTableBody">
+            <tr class="empty-row"><td colspan="8">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentHall = '1';
+let bookings = { '1': [], '2': [] };
+
+function storageKey(hall) { return 'bookings-hall-' + hall; }
+
+function setStatus(ok, text) {
+  const el = document.getElementById('statusLine');
+  el.className = 'status-line ' + (ok ? 'status-ok' : 'status-bad');
+  el.textContent = text;
+}
+
+async function checkStorageAvailable() {
+  if (typeof window.storage === 'undefined') {
+    setStatus(false, 'Storage is not available in this view — bookings cannot be saved here. See note below.');
+    return false;
+  }
+  try {
+    await window.storage.set('connection-test', String(Date.now()), true);
+    setStatus(true, 'Connected — bookings save and sync live.');
+    return true;
+  } catch (e) {
+    setStatus(false, 'Could not connect to shared storage: ' + (e && e.message ? e.message : e));
+    return false;
+  }
+}
+
+async function loadHall(hall) {
+  try {
+    const res = await window.storage.get(storageKey(hall), true);
+    bookings[hall] = res && res.value ? JSON.parse(res.value) : [];
+  } catch (e) {
+    bookings[hall] = [];
+  }
+}
+
+async function loadAll() {
+  const ok = await checkStorageAvailable();
+  if (!ok) {
+    document.getElementById('bookingsTableBody').innerHTML =
+      '<tr class="empty-row"><td colspan="8">Could not load bookings — storage unavailable.</td></tr>';
+    return;
+  }
+  await Promise.all([loadHall('1'), loadHall('2')]);
+  renderTable();
+}
+
+function switchTab(hall) {
+  currentHall = hall;
+  document.getElementById('tabBtn1').classList.toggle('active', hall === '1');
+  document.getElementById('tabBtn2').classList.toggle('active', hall === '2');
+  renderTable();
+}
+
+function checkConflicts(hall, date, start, end, excludeId) {
+  return bookings[hall].filter(b =>
+    b.id !== excludeId &&
+    b.date === date &&
+    (start < b.endTime && end > b.startTime)
+  );
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+document.getElementById('bookingForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const hall = document.getElementById('hallSelect').value;
+  const date = document.getElementById('date').value;
+  const startTime = document.getElementById('startTime').value;
+  const endTime = document.getElementById('endTime').value;
+  const bookedBy = document.getElementById('bookedBy').value.trim();
+  const department = document.getElementById('department').value.trim();
+  const purpose = document.getElementById('purpose').value.trim();
+  const formMsg = document.getElementById('formMsg');
+  formMsg.innerHTML = '';
+
+  if (!date || !startTime || !endTime || !bookedBy) {
+    formMsg.innerHTML = '<div class="warn-box">Please fill in date, start time, end time, and your name.</div>';
+    return;
+  }
+  if (startTime >= endTime) {
+    formMsg.innerHTML = '<div class="warn-box">End time must be after start time.</div>';
+    return;
+  }
+  if (typeof window.storage === 'undefined') {
+    formMsg.innerHTML = '<div class="warn-box">Storage is unavailable in this view, so the booking cannot be saved here.</div>';
+    return;
+  }
+
+  const conflicts = checkConflicts(hall, date, startTime, endTime, null);
+  if (conflicts.length > 0) {
+    const c = conflicts[0];
+    formMsg.innerHTML = '<div class="warn-box">Conflict: overlaps a booking on ' + c.date + ' from ' +
+      c.startTime + ' to ' + c.endTime + ' (' + escapeHtml(c.bookedBy) + '). Choose another time or hall.</div>';
+    return;
+  }
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Booking…';
+
+  const newBooking = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    date, startTime, endTime, bookedBy, department, purpose, status: 'Confirmed'
+  };
+
+  try {
+    bookings[hall].push(newBooking);
+    const result = await window.storage.set(storageKey(hall), JSON.stringify(bookings[hall]), true);
+    if (!result) throw new Error('Storage returned no result — save may not have completed.');
+    formMsg.innerHTML = '<div class="ok-box">Reservation confirmed.</div>';
+    this.reset();
+    if (hall !== currentHall) switchTab(hall); else renderTable();
+  } catch (err) {
+    bookings[hall].pop();
+    const detail = err && err.message ? err.message : String(err);
+    formMsg.innerHTML = '<div class="warn-box">Could not save the booking.<br>Error detail: ' + escapeHtml(detail) +
+      '<br><button class="retry-btn" type="button" onclick="loadAll()">Retest connection</button></div>';
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit reservation';
+  }
+});
+
+async function deleteBooking(hall, id) {
+  if (!confirm('Cancel this booking?')) return;
+  bookings[hall] = bookings[hall].filter(b => b.id !== id);
+  try {
+    await window.storage.set(storageKey(hall), JSON.stringify(bookings[hall]), true);
+  } catch (e) {}
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('bookingsTableBody');
+  const filtered = bookings[currentHall].slice().sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime));
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">No bookings recorded for this hall.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(b => {
+    const conflicts = checkConflicts(currentHall, b.date, b.startTime, b.endTime, b.id);
+    const hasConflict = conflicts.length > 0;
+    const conflictCell = hasConflict
+      ? '<span class="badge badge-danger">Conflict with ' + escapeHtml(conflicts[0].bookedBy) + '</span>'
+      : '<span class="badge badge-success">OK — clear</span>';
+    return '<tr>' +
+      '<td>' + b.date + '</td>' +
+      '<td>' + b.startTime + '</td>' +
+      '<td>' + b.endTime + '</td>' +
+      '<td>' + escapeHtml(b.bookedBy) + '</td>' +
+      '<td>' + escapeHtml(b.department) + '</td>' +
+      '<td>' + escapeHtml(b.purpose) + '</td>' +
+      '<td>' + conflictCell + '</td>' +
+      '<td><button class="delete-btn" onclick="deleteBooking(\'' + currentHall + '\',\'' + b.id + '\')">Cancel</button></td>' +
+    '</tr>';
+  }).join('');
+}
+
+loadAll();
+</script>
